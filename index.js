@@ -19,12 +19,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // 使用第三方中间件 cors 实现跨域
 app.use(cors());
 
-// ------------------------- 数据增删改查封装 ------------------------
+// ------------------------- 数据增删改查封装 - 封装可以复用 ------------------------
 
 /**
  * 函数封装：根据路径，获取数据。
- * @param {*} file          文件路径
- * @param {*} defaultData   默认返回数据
+ * @param {字符串} file          文件路径
+ * @param {数组} defaultData     默认数据
+ * @return {数组}                获取：返回数组数据
  */
 function getFileData(file = './json/hero.json', defaultData = []) {
     // 同步写法可能会出现读取失败的情况
@@ -43,35 +44,151 @@ function getFileData(file = './json/hero.json', defaultData = []) {
 
 /**
  * 函数封装：传入数据，把数据保存到对应路径文件中
- * @param {*} defaultData 数据
- * @param {*} file 文件路径
+ * @param {数组} defaultData   数据
+ * @param {字符串} file        文件路径
+ * @return {布尔值}            写入：返回布尔值
  */
 function saveFileData(defaultData = [], file = './json/hero.json') {
     try {
         // 通过 path 拼接绝对路径
         const filePath = path.join(__dirname, file);
+        // JSON.stringify() 第三个参数可以用来格式化 JSON 字符串缩进，2 代表缩进两个空格
         fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
+        // 写入成功返回 true
         return true;
     } catch (error) {
+        // 写入失败返回 false
         return false;
     }
 }
 
-const bl = saveFileData([{
-    id: 1,
-    name: '鸠摩智',
-    skill: '报错',
-    icon: 'xxx'
-}]);
-if (bl) {
-    console.log('保存成功');
+// const bl = saveFileData([{
+//     id: 1,
+//     name: '鸠摩智',
+//     skill: '报错',
+//     icon: 'xxx'
+// }]);
+// if (bl) {
+//     console.log('保存成功');
+// } else {
+//     console.log('保存失败');
+// }
+const db = {
+    file: './json/hero.json',
+    // 1. 查所有数据
+    get() {
+        const data = getFileData(this.file);
+        return data;
+    },
+    // 2. 查一条数据
+    search(id) {
+        const data = getFileData(this.file);
+        // 表单提交过来是字符串，所以用两个等于号，自动隐式转换比较
+        return data.find(item => item.id == id);
+    },
+    // 3. 增加一条数据
+    add({ name, skill, icon }) {
+        // 读取文件
+        const data = getFileData(this.file);
+        // 追加数据
+        data.push({
+            id: data[data.length - 1].id + 1,
+            name,
+            skill,
+            icon
+        });
+        // 写入数据
+        return saveFileData(data);
+    },
+    // 4. 删除一条数据
+    delete(id) {
+        // 读取文件
+        const data = getFileData(this.file);
+        // 根据 id 找到数据，并删除
+        const index = data.findIndex(item => item.id == id);
+        // 如果索引值能找到
+        if (index !== -1) {
+            // 删除数据
+            data.splice(index, 1);
+            // 写入数据
+            return saveFileData(data);
+        }
+        // 否则返回 false
+        else {
+            return false;
+        }
+    },
+    // 5. 修改一条数据
+    edit({ id, name, skill, icon }) {
+        // 读取文件
+        const data = getFileData(this.file);
+        // 把找到的对象的内存地址赋值给 dataFind
+        const dataFind = data.find(item => item.id == id);
+        if (dataFind) {
+            // 根据地址找到属性，再进行修改
+            dataFind.name = name;
+            dataFind.skill = skill;
+            dataFind.icon = icon;
+            // 写入数据
+            return saveFileData(data);;
+        } else {
+            return false;
+        }
+    }
+}
+
+// 测试封装的方法-----------
+
+// 1. 查所有数据
+const dataAll = db.get();
+console.log('调用查询接口时候的数据为：', dataAll);
+
+
+// 2. 查一条数据
+const dataId = db.search(3);
+if (dataId) {
+    console.log('查一条数据', dataId);
 } else {
-    console.log('保存失败');
+    console.log('查无此人');
+}
+
+// 3. 增加一条数据
+const bl = db.add({
+    name: '大番薯2',
+    skill: '开热点2',
+    icon: 'xxxxxx'
+});
+if (bl) {
+    console.log('新增成功');
+} else {
+    console.log('新增失败');
+}
+
+// 4. 删除一条数据
+const bl2 = db.delete(1);
+if (bl2) {
+    console.log('删除成功');
+} else {
+    console.log('删除失败');
+}
+
+
+// 5. 修改一条数据
+const bl3 = db.edit({
+    id: 100,
+    name: '小土狗',
+    skill: '舔',
+    icon: 'yyyy'
+});
+if (bl3) {
+    console.log('修改成功');
+} else {
+    console.log('修改失败');
 }
 
 
 
-// ----------------------- 下面是接口 ------------------------------
+// ----------------------- 下面是接口代码 - 业务代码 ------------------------------
 
 
 // 服务器在 3000 端口启动
