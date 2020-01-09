@@ -11,7 +11,8 @@ const fs = require('fs');
 const app = express();
 
 // 利用 multer 第三方包 multer，初始化一个用于上传 form-data 图片的 函数，函数名叫 upload。
-const upload = multer({ dest: path.join(__dirname, '/public/uploads/') }).single('avatar');
+// 上传插件 name 属性修改.
+const upload = multer({ dest: path.join(__dirname, '/public/uploads/') }).single('icon');
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -77,7 +78,9 @@ const db = {
     file: './json/hero.json',
     // 1. 查所有数据
     get() {
+        // 读取全部数据
         const data = getFileData(this.file);
+        // 返回所有数据
         return data;
     },
     // 2. 查一条数据
@@ -92,12 +95,13 @@ const db = {
         const data = getFileData(this.file);
         // 追加数据
         data.push({
+            // 基于最后的数据增加 id
             id: data[data.length - 1].id + 1,
             name,
             skill,
             icon
         });
-        // 写入数据
+        // 写入数据，调用完成返回 true 或 flase
         return saveFileData(data);
     },
     // 4. 删除一条数据
@@ -124,14 +128,17 @@ const db = {
         const data = getFileData(this.file);
         // 把找到的对象的内存地址赋值给 dataFind
         const dataFind = data.find(item => item.id == id);
+        // 如果能找到数据
         if (dataFind) {
-            // 根据地址找到属性，再进行修改
+            // 根据地址找到属性，再根据参数进行修改
             dataFind.name = name;
             dataFind.skill = skill;
             dataFind.icon = icon;
             // 写入数据
             return saveFileData(data);;
-        } else {
+        } 
+        // 否则返回 false
+        else {
             return false;
         }
     }
