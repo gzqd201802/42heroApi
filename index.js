@@ -19,6 +19,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // 使用第三方中间件 cors 实现跨域
 app.use(cors());
 
+// ------------------------- 数据增删改查封装 ------------------------
+
 /**
  * 函数封装：根据路径，获取数据。
  * @param {*} file          文件路径
@@ -38,6 +40,39 @@ function getFileData(file = './json/user.json', defaultData = []) {
         return defaultData;
     }
 }
+
+/**
+ * 函数封装：传入数据，把数据保存到对应路径文件中
+ * @param {*} defaultData 数据
+ * @param {*} file 文件路径
+ */
+function saveFileData(defaultData = [], file = './json/hero.json') {
+    try {
+        // 通过 path 拼接绝对路径
+        const filePath = path.join(__dirname, file);
+        fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+const bl = saveFileData([{
+    id: 1,
+    name: '鸠摩智',
+    skill: '报错',
+    icon: 'xxx'
+}]);
+if (bl) {
+    console.log('保存成功');
+} else {
+    console.log('保存失败');
+}
+
+
+
+// ----------------------- 下面是接口 ------------------------------
+
 
 // 服务器在 3000 端口启动
 app.listen(3000, () => {
