@@ -26,7 +26,7 @@ app.use(cors());
  * @param {*} file          文件路径
  * @param {*} defaultData   默认返回数据
  */
-function getFileData(file = './json/user.json', defaultData = []) {
+function getFileData(file = './json/hero.json', defaultData = []) {
     // 同步写法可能会出现读取失败的情况
     try {
         // 通过 path 拼接绝对路径
@@ -103,6 +103,7 @@ app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
     // 调用封装好的函数，获取文件信息，内部返回<数组>格式数据，保存到 data 常量中
+    // 登录读取的是 user.json，英雄数据是 hero.json
     const data = getFileData('./json/user.json');
 
     // 调用数组 find 方法，获取数组中某个用户名的信息
