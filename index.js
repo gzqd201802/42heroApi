@@ -136,64 +136,13 @@ const db = {
             dataFind.icon = icon;
             // 写入数据
             return saveFileData(data);;
-        } 
+        }
         // 否则返回 false
         else {
             return false;
         }
     }
 }
-
-// 测试封装的方法-----------
-
-// 1. 查所有数据
-const dataAll = db.get();
-console.log('调用查询接口时候的数据为：', dataAll);
-
-
-// 2. 查一条数据
-const dataId = db.search(3);
-if (dataId) {
-    console.log('查一条数据', dataId);
-} else {
-    console.log('查无此人');
-}
-
-// 3. 增加一条数据
-const bl = db.add({
-    name: '大番薯2',
-    skill: '开热点2',
-    icon: 'xxxxxx'
-});
-if (bl) {
-    console.log('新增成功');
-} else {
-    console.log('新增失败');
-}
-
-// 4. 删除一条数据
-const bl2 = db.delete(1);
-if (bl2) {
-    console.log('删除成功');
-} else {
-    console.log('删除失败');
-}
-
-
-// 5. 修改一条数据
-const bl3 = db.edit({
-    id: 100,
-    name: '小土狗',
-    skill: '舔',
-    icon: 'yyyy'
-});
-if (bl3) {
-    console.log('修改成功');
-} else {
-    console.log('修改失败');
-}
-
-
 
 // ----------------------- 下面是接口代码 - 业务代码 ------------------------------
 
@@ -262,6 +211,101 @@ app.post('/login', (req, res) => {
 });
 
 
+app.get('/list', (req, res) => {
+    const data = db.get();
+    if (data) {
+        res.send({
+            code: 200,
+            msg: '获取成功',
+            data
+        });
+    } else {
+        res.send({
+            code: 400,
+            msg: '获取失败',
+        });
+    }
+});
+
+app.get('/search', (req, res) => {
+    const { id } = req.query;
+    const data = db.search(id);
+    if (data) {
+        res.send({
+            code: 200,
+            msg: '获取成功',
+            data
+        });
+    } else {
+        res.send({
+            code: 400,
+            msg: '获取失败',
+        });
+    }
+});
+
+// 增加：
+//      1. 需要使用 multer 插件事项图片上传，注意图片属性为 icon
+//      2. 如何获取到上传图片后再服务器的图片名称
+//      3. 还要把图片名称和路径自己拼成相对路径
+app.post('/add', upload, (req, res) => {
+    console.log(req);
+    const { name, skill } = req.body;
+    const { filename } = req.file;
+    // const newData = {
+    //     name,
+    //     skill,
+    //     icon: path.join('/public/uploads',filename)
+    // }
+    // // console.log(newData);
+    const bl = db.add({
+        name,
+        skill,
+        icon: path.join('/public/uploads', filename)
+    });
+    // if (bl) {
+    //     res.send({code: 200,msg: '新增成功'});
+    // } else {
+    //     res.send({
+    //         code: 400,
+    //         msg: '参数错误'
+    //     });
+    // }
+    bl ? res.send({ code: 200, msg: '新增成功' }) : res.send({ code: 400, msg: '参数错误' });
+});
+
+// 英雄删除
+app.get('/delete', upload, (req, res) => {
+    const {id} = req.query;
+    const bl = db.delete(id);
+    bl ? res.send({ code: 200, msg: '删除成功' }) : res.send({ code: 400, msg: '参数错误' });
+});
+
+// 英雄编辑
+app.post('/edit', upload, (req, res) => {
+    console.log(req);
+    
+    const {id,name,skill} = req.body;
+    const { filename } = req.file;
+
+    // const newData = {
+    //     id,
+    //     name,
+    //     skill,
+    //     icon: path.join('/public/uploads',filename)
+    // }
+    // console.log(newData);
+
+    // res.send('测试一下');
+
+    const bl = db.edit({
+        id,
+        name,
+        skill,
+        icon: path.join('/public/uploads',filename)
+    });
+    bl ? res.send({ code: 200, msg: '修改成功' }) : res.send({ code: 400, msg: '参数错误' });
+});
 
 
 
