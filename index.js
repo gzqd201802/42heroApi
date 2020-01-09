@@ -11,7 +11,7 @@ const fs = require('fs');
 const app = express();
 
 // 利用 multer 第三方包 multer，初始化一个用于上传 form-data 图片的 函数，函数名叫 upload。
-// 上传插件 name 属性修改.
+// !!!! 上传插件需要修改成  .single('icon');
 const upload = multer({ dest: path.join(__dirname, '/public/uploads/') }).single('icon');
 
 // parse application/x-www-form-urlencoded
@@ -210,16 +210,20 @@ app.post('/login', (req, res) => {
     }
 });
 
-
+// 所有英雄查询
 app.get('/list', (req, res) => {
+    // 调用 db.get 查找所有数据，并接受返回值，用于判断
     const data = db.get();
+    // 如果有返回数据，提示获取成功，并在 data 中返回数据
     if (data) {
         res.send({
             code: 200,
             msg: '获取成功',
             data
         });
-    } else {
+    }
+    // 否则返回获取失败 
+    else {
         res.send({
             code: 400,
             msg: '获取失败',
@@ -227,16 +231,22 @@ app.get('/list', (req, res) => {
     }
 });
 
+// 单个英雄查询
 app.get('/search', (req, res) => {
+    // 获取 get 方式的参数
     const { id } = req.query;
+    // 调用 db.search 查找单个数据，并接受返回值，用于判断
     const data = db.search(id);
+    // 如果有返回数据，提示获取成功，并在 data 中返回数据
     if (data) {
         res.send({
             code: 200,
             msg: '获取成功',
             data
         });
-    } else {
+    }
+    // 否则返回获取失败 
+    else {
         res.send({
             code: 400,
             msg: '获取失败',
@@ -244,66 +254,49 @@ app.get('/search', (req, res) => {
     }
 });
 
-// 增加：
+// 英雄增加
 //      1. 需要使用 multer 插件事项图片上传，注意图片属性为 icon
 //      2. 如何获取到上传图片后再服务器的图片名称
 //      3. 还要把图片名称和路径自己拼成相对路径
-app.post('/add', upload, (req, res) => {
-    console.log(req);
+app.post('/add', upload, (req, res) => {  // 注意第二个参数 upload
+    // 获取 form-data 文本参数
     const { name, skill } = req.body;
+    // 获取 form-data 图片文件名
     const { filename } = req.file;
-    // const newData = {
-    //     name,
-    //     skill,
-    //     icon: path.join('/public/uploads',filename)
-    // }
-    // // console.log(newData);
+    // 调用 db.add 添加数据，并接受返回值，用于判断
     const bl = db.add({
         name,
         skill,
         icon: path.join('/public/uploads', filename)
     });
-    // if (bl) {
-    //     res.send({code: 200,msg: '新增成功'});
-    // } else {
-    //     res.send({
-    //         code: 400,
-    //         msg: '参数错误'
-    //     });
-    // }
+    // 三元表达式， bl 作为判断条件 ：true 提示成功， false 提示失败
     bl ? res.send({ code: 200, msg: '新增成功' }) : res.send({ code: 400, msg: '参数错误' });
 });
 
 // 英雄删除
 app.get('/delete', upload, (req, res) => {
-    const {id} = req.query;
+    // 获取 get 方式的参数
+    const { id } = req.query;
+    // 调用 db.delete 删除数据，并接受返回值，用于判断
     const bl = db.delete(id);
+    // 三元表达式， bl 作为判断条件 ：true 提示成功， false 提示失败
     bl ? res.send({ code: 200, msg: '删除成功' }) : res.send({ code: 400, msg: '参数错误' });
 });
 
 // 英雄编辑
 app.post('/edit', upload, (req, res) => {
-    console.log(req);
-    
-    const {id,name,skill} = req.body;
+    // 获取 form-data 文本参数
+    const { id, name, skill } = req.body;
+    // 获取 form-data 图片文件名
     const { filename } = req.file;
-
-    // const newData = {
-    //     id,
-    //     name,
-    //     skill,
-    //     icon: path.join('/public/uploads',filename)
-    // }
-    // console.log(newData);
-
-    // res.send('测试一下');
-
+    // 调用 db.edit 编辑数据，并接受返回值，用于判断
     const bl = db.edit({
         id,
         name,
         skill,
-        icon: path.join('/public/uploads',filename)
+        icon: path.join('/public/uploads', filename)
     });
+    // 三元表达式， bl 作为判断条件 ：true 提示成功， false 提示失败
     bl ? res.send({ code: 200, msg: '修改成功' }) : res.send({ code: 400, msg: '参数错误' });
 });
 
